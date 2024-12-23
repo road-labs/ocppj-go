@@ -1,0 +1,23 @@
+version: "3"
+
+tasks:
+  install:
+    desc: Install dependencies.
+    cmds:
+      - go install go.uber.org/mock/mockgen@latest
+
+  test:
+    desc: Run all tests.
+    cmds:
+      - go test ./...
+
+  generate:
+    cmds:
+      - task: generate-mocks
+
+  generate-mocks:
+    cmds:
+      - mockgen -source=./ocppj/client.go -package=mocks -destination=./ocppj/mocks/client_mocks.go
+      - mockgen -source=./ocppj/client_hooks.go -package=mocks -destination=./ocppj/mocks/client_hooks_mocks.go
+      - mockgen -source=./ocppj/server_hooks.go -package=mocks -destination=./ocppj/mocks/server_hooks_mocks.go
+      - mockgen -source=./ocppj/rate.go -package=mocks -destination=./ocppj/mocks/rate_mocks.go
