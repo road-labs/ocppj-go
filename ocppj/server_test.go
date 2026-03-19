@@ -10,15 +10,14 @@ import (
 	"time"
 
 	"go.uber.org/mock/gomock"
+	"golang.org/x/time/rate"
 
 	"github.com/e-flux-platform/ocppj-go/ocppj"
 	"github.com/e-flux-platform/ocppj-go/ocppj/clientopt"
+	"github.com/e-flux-platform/ocppj-go/ocppj/internal/mocks"
 	"github.com/e-flux-platform/ocppj-go/ocppj/message"
-	"github.com/e-flux-platform/ocppj-go/ocppj/mocks"
 	"github.com/e-flux-platform/ocppj-go/ocppj/serveropt"
 	"github.com/e-flux-platform/ocppj-go/websocket"
-
-	"golang.org/x/time/rate"
 )
 
 const (
@@ -44,7 +43,7 @@ func BenchmarkServer_OpenClients(b *testing.B) {
 		return nil
 	}).AnyTimes()
 
-	server := ocppj.NewServer(
+	server, err := ocppj.NewServer(
 		mockServerHooks,
 		mockClientHooks,
 		serveropt.WithUpgrader(upgrader),
@@ -52,6 +51,9 @@ func BenchmarkServer_OpenClients(b *testing.B) {
 		serveropt.WithPort(serverPort),
 		serveropt.WithClientRateLimiter(nil),
 	)
+	if err != nil {
+		b.Error(err)
+	}
 
 	go func() {
 		err := server.Start(ctx)
@@ -109,7 +111,7 @@ func BenchmarkServer_OpenClients_WithRateLimiter(b *testing.B) {
 		return nil
 	}).AnyTimes()
 
-	server := ocppj.NewServer(
+	server, err := ocppj.NewServer(
 		mockServerHooks,
 		mockClientHooks,
 		serveropt.WithUpgrader(upgrader),
@@ -117,6 +119,9 @@ func BenchmarkServer_OpenClients_WithRateLimiter(b *testing.B) {
 		serveropt.WithPort(serverPort),
 		serveropt.WithClientRateLimiter(rateLimiter),
 	)
+	if err != nil {
+		b.Error(err)
+	}
 
 	go func() {
 		err := server.Start(ctx)
@@ -173,7 +178,7 @@ func BenchmarkServer_SendMessages(b *testing.B) {
 		return nil
 	}).AnyTimes()
 
-	server := ocppj.NewServer(
+	server, err := ocppj.NewServer(
 		mockServerHooks,
 		mockClientHooks,
 		serveropt.WithUpgrader(upgrader),
@@ -181,6 +186,9 @@ func BenchmarkServer_SendMessages(b *testing.B) {
 		serveropt.WithPort(serverPort),
 		serveropt.WithClientRateLimiter(nil),
 	)
+	if err != nil {
+		b.Error(err)
+	}
 
 	go func() {
 		err := server.Start(ctx)
@@ -266,7 +274,7 @@ func BenchmarkServer_SendMessages_WithRateLimiter(b *testing.B) {
 		return nil
 	}).AnyTimes()
 
-	server := ocppj.NewServer(
+	server, err := ocppj.NewServer(
 		mockServerHooks,
 		mockClientHooks,
 		serveropt.WithUpgrader(upgrader),
@@ -274,6 +282,9 @@ func BenchmarkServer_SendMessages_WithRateLimiter(b *testing.B) {
 		serveropt.WithPort(serverPort),
 		serveropt.WithClientRateLimiter(rateLimiter),
 	)
+	if err != nil {
+		b.Error(err)
+	}
 
 	go func() {
 		err := server.Start(ctx)

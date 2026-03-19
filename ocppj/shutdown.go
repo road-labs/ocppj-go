@@ -2,13 +2,14 @@ package ocppj
 
 import (
 	"context"
+	"iter"
 	"time"
 )
 
-type ShutdownStrategy func(context.Context, []*Client) error
+type DrainStrategy func(context.Context, iter.Seq[*Client]) error
 
-func defaultShutdownStrategy(ctx context.Context, clients []*Client) error {
-	for _, client := range clients {
+func defaultDrainStrategy(ctx context.Context, clients iter.Seq[*Client]) error {
+	for client := range clients {
 		go func() {
 			ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 			defer cancel()

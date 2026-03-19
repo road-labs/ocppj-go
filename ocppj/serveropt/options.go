@@ -3,6 +3,7 @@ package serveropt
 import (
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/e-flux-platform/ocppj-go/ocppj"
@@ -78,10 +79,19 @@ func WithClientRateLimiter(limiter ocppj.ClientRateLimiter) ocppj.ServerOption {
 	}
 }
 
-// WithShutdownStrategy configures a function that can be used to change the client drain strategy during shutdown. The
+// WithDrainStrategy configures a function that can be used to change the client drain strategy during shutdown. The
 // default strategy is to attempt to gracefully close all clients at the same time.
-func WithShutdownStrategy(strategy ocppj.ShutdownStrategy) ocppj.ServerOption {
+func WithDrainStrategy(strategy ocppj.DrainStrategy) ocppj.ServerOption {
 	return func(c *ocppj.ServerConfig) {
-		c.ShutdownStrategy = strategy
+		c.DrainStrategy = strategy
+	}
+}
+
+// WithLogger configures the logger to use for the server instance. If not set, there is no log output. Currently, this
+// logger is utilized for client instances as well; in the future we may support configuring a separate logger for
+// clients if there is a need.
+func WithLogger(logger *slog.Logger) ocppj.ServerOption {
+	return func(c *ocppj.ServerConfig) {
+		c.Logger = logger
 	}
 }

@@ -2,6 +2,7 @@ package ocppj
 
 import (
 	"crypto/tls"
+	"log/slog"
 	"time"
 
 	"github.com/e-flux-platform/ocppj-go/websocket"
@@ -16,8 +17,9 @@ type ServerConfig struct {
 	TLSConfig          *tls.Config
 	SupportedProtocols []string
 	Upgrader           Upgrader
-	ShutdownStrategy   ShutdownStrategy
+	DrainStrategy      DrainStrategy
 	ClientRateLimiter  ClientRateLimiter
+	Logger             *slog.Logger
 }
 
 const (
@@ -46,11 +48,14 @@ func newServerConfig(opts []ServerOption) *ServerConfig {
 	if c.HealthPath == "" {
 		c.HealthPath = defaultHealthPath
 	}
-	if c.ShutdownStrategy == nil {
-		c.ShutdownStrategy = defaultShutdownStrategy
+	if c.DrainStrategy == nil {
+		c.DrainStrategy = defaultDrainStrategy
 	}
 	if c.Upgrader == nil {
 		c.Upgrader = websocket.NewUpgrader()
+	}
+	if c.Logger == nil {
+		c.Logger = slog.New(noopLogger{})
 	}
 	return c
 }

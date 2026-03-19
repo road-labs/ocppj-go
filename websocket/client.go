@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net"
 	"net/http"
 	"net/url"
@@ -185,9 +184,7 @@ func (c *Client) sendPings(ctx context.Context, interval time.Duration) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := c.Write(Message{Type: MessageTypePing}); err != nil {
-				slog.Error("failed to send ping", slog.Any("error", err))
-			}
+			_ = c.Write(Message{Type: MessageTypePing})
 		}
 	}
 }

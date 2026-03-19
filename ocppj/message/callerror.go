@@ -18,6 +18,9 @@ const (
 	NotSupportedError Error = "NotSupportedError"
 	// SecurityError is an error indicating that the requested action is not allowed due to security reasons
 	SecurityError Error = "SecurityError"
+	// OccurrenceConstraintViolation indicates the payload is syntactically correct but at least one of the fields
+	// violates occurrence constraints
+	OccurrenceConstraintViolation Error = "OccurrenceConstraintViolation"
 )
 
 type CallError struct {

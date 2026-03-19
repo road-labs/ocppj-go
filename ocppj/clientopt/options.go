@@ -2,6 +2,7 @@ package clientopt
 
 import (
 	"crypto/tls"
+	"log/slog"
 	"time"
 
 	"github.com/e-flux-platform/ocppj-go/ocppj"
@@ -27,6 +28,7 @@ func WithMetadata(metadata map[string]any) ocppj.ClientOption {
 // - ocpp1.5
 // - ocpp1.6
 // - ocpp2.0.1
+// - ocpp2.1
 func WithSupportedProtocols(protocols []string) ocppj.ClientOption {
 	return func(c *ocppj.ClientConfig) {
 		c.SupportedProtocols = protocols
@@ -71,6 +73,13 @@ func WithWebsocketPingInternal(interval time.Duration) ocppj.ClientOption {
 func WithRateLimiter(rl ocppj.ClientRateLimiter) ocppj.ClientOption {
 	return func(c *ocppj.ClientConfig) {
 		c.RateLimiter = rl
+	}
+}
+
+// WithLogger configures the logger to use for the client instance. If not set, there is no log output.
+func WithLogger(logger *slog.Logger) ocppj.ClientOption {
+	return func(c *ocppj.ClientConfig) {
+		c.Logger = logger
 	}
 }
 

@@ -33,6 +33,7 @@ type Client struct {
 	callTimeout      time.Duration
 	processCallsDone chan struct{}
 	rateLimiter      ClientRateLimiter
+	logger           *slog.Logger
 }
 
 // outboundCall represents a request to a send a call to the other party. A context is carried within it; if this
@@ -113,6 +114,7 @@ func Open(ctx context.Context, url string, hooks ClientHooks, opts ...ClientOpti
 		wsClient,
 		conf.CallTimeout,
 		conf.RateLimiter,
+		conf.Logger,
 	)
 }
 
@@ -123,6 +125,7 @@ func newClient(
 	wsClient WebsocketClient,
 	callTimeout time.Duration,
 	rateLimiter ClientRateLimiter,
+	logger *slog.Logger,
 ) (*Client, error) {
 	processCtx, cancel := context.WithCancel(context.Background())
 	client := &Client{
@@ -136,6 +139,7 @@ func newClient(
 		callTimeout:      callTimeout,
 		processCallsDone: make(chan struct{}),
 		rateLimiter:      rateLimiter,
+		logger:           logger,
 	}
 	go func() {
 		_ = client.processOutboundCallsAndReplies(processCtx)
@@ -159,7 +163,7 @@ func (c *Client) Read(ctx context.Context) error {
 		msg, err := message.FromJSON(data.Data)
 		if err != nil {
 			if err = c.hooks.OnInvalidMessageRead(ctx, c, data.Data, err); err != nil {
-				slog.Error("failed to handle invalid message", slog.Any("error", err))
+				c.logger.Error("failed to handle invalid message", slog.Any("error", err))
 			}
 			continue
 		}
@@ -173,20 +177,20 @@ func (c *Client) Read(ctx context.Context) error {
 		var isReply bool
 		switch m := msg.(type) {
 		case message.Call:
-			slog.Debug("call received", slog.String("client", c.id), slog.Any("payload", m))
+			c.logger.Debug("call received", slog.String("client", c.id), slog.Any("payload", m))
 			if err = c.hooks.OnCallRead(ctx, c, m); err != nil {
-				slog.Error("call handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("call", m))
+				c.logger.Error("call handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("call", m))
 			}
 		case message.CallResult:
-			slog.Debug("call result received", slog.String("client", c.id), slog.Any("payload", m))
+			c.logger.Debug("call result received", slog.String("client", c.id), slog.Any("payload", m))
 			if err = c.hooks.OnCallResultRead(ctx, c, m); err != nil {
-				slog.Error("call result handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("callresult", m))
+				c.logger.Error("call result handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("callresult", m))
 			}
 			isReply = true
 		case message.CallError:
-			slog.Debug("call error received", slog.String("client", c.id), slog.Any("payload", m))
+			c.logger.Debug("call error received", slog.String("client", c.id), slog.Any("payload", m))
 			if err = c.hooks.OnCallErrorRead(ctx, c, m); err != nil {
-				slog.Error("call error handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("callerror", m))
+				c.logger.Error("call error handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("callerror", m))
 			}
 			isReply = true
 		}
@@ -205,7 +209,7 @@ func (c *Client) Read(ctx context.Context) error {
 
 // WriteCall dispatches a call to the other party. It does not wait for a Call Result or Call Error before returning.
 func (c *Client) WriteCall(ctx context.Context, call message.Call) error {
-	slog.Debug("sending call", slog.String("client", c.id), slog.Any("payload", call))
+	c.logger.Debug("sending call", slog.String("client", c.id), slog.Any("payload", call))
 	_, err := c.sendCall(ctx, call, true)
 	return err
 }
@@ -231,7 +235,7 @@ func (c *Client) SyncWriteCall(ctx context.Context, call message.Call) (message.
 
 // WriteCallResult writes a Call Result type message.
 func (c *Client) WriteCallResult(ctx context.Context, callResult message.CallResult) error {
-	slog.Debug("sending call result", slog.String("client", c.id), slog.Any("payload", callResult))
+	c.logger.Debug("sending call result", slog.String("client", c.id), slog.Any("payload", callResult))
 	if err := c.writeMessage(callResult); err != nil {
 		return fmt.Errorf("failed to write call: %w", err)
 	}
@@ -243,7 +247,7 @@ func (c *Client) WriteCallResult(ctx context.Context, callResult message.CallRes
 
 // WriteCallError writes a Call Error type message.
 func (c *Client) WriteCallError(ctx context.Context, callError message.CallError) error {
-	slog.Debug("sending call error", slog.String("client", c.id), slog.Any("payload", callError))
+	c.logger.Debug("sending call error", slog.String("client", c.id), slog.Any("payload", callError))
 	if err := c.writeMessage(callError); err != nil {
 		return fmt.Errorf("failed to write call error: %w", err)
 	}
@@ -502,13 +506,10 @@ func (c *Client) hasReachedRateLimit(ctx context.Context, msg message.Message) b
 	return c.rateLimiter != nil && !c.rateLimiter.Allow(ctx, c, msg)
 }
 
-// handleReachedRateLimit handles the case when the client has reached the rate limit
-// in case it's a call message, it will send a call error message back to the client
-// otherwise it will do nothing
+// handleReachedRateLimit handles the case when the client has reached the rate limit in case it's a call message, it
+// will send a call error message back to the client otherwise it will do nothing
 func (c *Client) handleReachedRateLimit(ctx context.Context, msg message.Message) {
-	logger := slog.With(slog.String("client", c.id))
-	defer func() { logger.Warn("rate limit reached") }()
-
+	logger := c.logger.With(slog.String("client", c.id))
 	if call, ok := msg.(message.Call); ok {
 		err := c.WriteCallError(ctx, message.CallError{
 			MessageID:        call.MessageID,
@@ -525,4 +526,5 @@ func (c *Client) handleReachedRateLimit(ctx context.Context, msg message.Message
 			slog.String("action", call.Action),
 		)
 	}
+	logger.Warn("rate limit reached")
 }

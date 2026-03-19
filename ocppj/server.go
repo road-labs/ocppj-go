@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	"golang.org/x/exp/maps"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/e-flux-platform/ocppj-go/websocket"
@@ -21,14 +21,15 @@ const secWebsocketProtocolHeader = "Sec-WebSocket-Protocol"
 // Server represents a server party in the OCPP-J context. It runs starts a HTTP server and accepts upgrade requests
 // on a configured path.
 type Server struct {
-	conf             *ServerConfig
-	hooks            ServerHooks
-	clientHooks      ClientHooks
-	wsUpgrader       Upgrader
-	shutdownStrategy ShutdownStrategy
-	wg               sync.WaitGroup
-	mux              sync.Mutex
-	clients          map[string]*Client
+	conf          *ServerConfig
+	hooks         ServerHooks
+	clientHooks   ClientHooks
+	wsUpgrader    Upgrader
+	drainStrategy DrainStrategy
+	logger        *slog.Logger
+	wg            sync.WaitGroup
+	mux           sync.Mutex
+	clients       map[string]*Client
 }
 
 type Upgrader interface {
@@ -40,12 +41,13 @@ func NewServer(hooks ServerHooks, clientHooks ClientHooks, opts ...ServerOption)
 	conf := newServerConfig(opts)
 
 	return &Server{
-		conf:             conf,
-		hooks:            hooks,
-		clientHooks:      clientHooks,
-		wsUpgrader:       conf.Upgrader,
-		shutdownStrategy: conf.ShutdownStrategy,
-		clients:          make(map[string]*Client),
+		conf:          conf,
+		hooks:         hooks,
+		clientHooks:   clientHooks,
+		wsUpgrader:    conf.Upgrader,
+		drainStrategy: conf.DrainStrategy,
+		logger:        conf.Logger,
+		clients:       make(map[string]*Client),
 	}, nil
 }
 
@@ -65,7 +67,11 @@ func (s *Server) Start(ctx context.Context) error {
 
 	eg, ctx := errgroup.WithContext(ctx)
 	eg.Go(func() error {
-		slog.Info("ocpp-j server listening", slog.Any("address", s.conf.ListenAddr), slog.Bool("tls", s.conf.TLSConfig != nil))
+		s.logger.Info(
+			"ocpp-j server listening",
+			slog.Any("address", s.conf.ListenAddr),
+			slog.Bool("tls", s.conf.TLSConfig != nil),
+		)
 		var err error
 		if s.conf.TLSConfig != nil {
 			err = server.ListenAndServeTLS("", "")
@@ -89,20 +95,26 @@ func (s *Server) Start(ctx context.Context) error {
 }
 
 func (s *Server) handleUpgrade(w http.ResponseWriter, req *http.Request) {
-	// Select which protocol we're going to use
-	protocol, err := s.selectProtocol(req.Header.Get(secWebsocketProtocolHeader))
+	websocketProtocol := req.Header.Get(secWebsocketProtocolHeader)
+	s.logger.Info(
+		"upgrade request received",
+		slog.String("path", req.URL.Path),
+		slog.String("supportedProtocols", websocketProtocol),
+	)
+
+	// Select which selectedProtocol we're going to use
+	selectedProtocol, err := s.selectProtocol(websocketProtocol)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// Process the upgrade request
-	res, err := s.hooks.OnUpgradeRequested(req.Context(), req, protocol)
+	res, err := s.hooks.OnUpgradeRequested(req.Context(), req, selectedProtocol)
 	if err != nil {
-		slog.Error("upgrade request failed", slog.Any("error", err))
-		upgradeError := &ServerUpgradeError{}
-		if errors.As(err, &upgradeError) {
-			http.Error(w, upgradeError.message, upgradeError.httpStatus)
+		s.logger.Error("upgrade request failed", slog.Any("error", err))
+		if upgradeError, ok := errors.AsType[*ServerUpgradeError](err); ok {
+			http.Error(w, upgradeError.Message, upgradeError.HTTPStatus)
 			return
 		}
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -111,9 +123,10 @@ func (s *Server) handleUpgrade(w http.ResponseWriter, req *http.Request) {
 
 	// Perform websocket upgrade
 	respHeaders := make(http.Header)
-	respHeaders.Set(secWebsocketProtocolHeader, string(protocol))
+	respHeaders.Set(secWebsocketProtocolHeader, string(selectedProtocol))
 	wsClient, err := s.wsUpgrader.Upgrade(w, req, respHeaders)
 	if err != nil {
+		s.logger.Warn("unable to upgrade websocket", slog.String("id", res.ClientID), slog.Any("error", err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -132,16 +145,17 @@ func (s *Server) handleUpgrade(w http.ResponseWriter, req *http.Request) {
 			wsClient,
 			s.conf.ClientCallTimeout,
 			s.conf.ClientRateLimiter,
+			s.logger,
 		)
 		if err != nil {
 			_ = wsClient.Close()
-			slog.Error("failed to create client", slog.Any("error", err))
+			s.logger.Error("failed to create client", slog.Any("error", err))
 			return
 		}
 		defer client.Close()
 
 		err = s.processClient(ctx, client)
-		slog.Info(
+		s.logger.Info(
 			"client disconnected",
 			slog.String("id", client.ID()),
 			slog.String("websocketId", client.WebsocketID()),
@@ -168,7 +182,7 @@ func (s *Server) processClient(ctx context.Context, client *Client) error {
 	defer func() {
 		err := s.hooks.OnClientDisconnected(ctx, client)
 		if err != nil {
-			slog.Error("client disconnect hook failed", slog.Any("error", err))
+			s.logger.Error("client disconnect hook failed", slog.Any("error", err))
 		}
 	}()
 
@@ -197,14 +211,15 @@ func (s *Server) selectProtocol(requestedProtocols string) (string, error) {
 func (s *Server) drainClients() {
 	s.mux.Lock()
 	clients := maps.Values(s.clients)
+	total := len(s.clients)
 	s.mux.Unlock()
 
-	slog.Info("draining clients", slog.Int("total", len(clients)))
+	s.logger.Info("draining clients", slog.Int("total", total))
 
 	// Disconnect all clients
 	ctx := context.Background()
-	if err := s.shutdownStrategy(ctx, clients); err != nil {
-		slog.Error("shutdown failed", slog.Any("error", err))
+	if err := s.drainStrategy(ctx, clients); err != nil {
+		s.logger.Error("shutdown failed", slog.Any("error", err))
 		return
 	}
 
@@ -218,10 +233,10 @@ func (s *Server) handleHealth(w http.ResponseWriter, req *http.Request) {
 }
 
 type ServerUpgradeError struct {
-	httpStatus int
-	message    string
+	HTTPStatus int
+	Message    string
 }
 
 func (s *ServerUpgradeError) Error() string {
-	return s.message
+	return s.Message
 }
