@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"maps"
 	"net/http"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -210,11 +211,10 @@ func (s *Server) selectProtocol(requestedProtocols string) (string, error) {
 
 func (s *Server) drainClients() {
 	s.mux.Lock()
-	clients := maps.Values(s.clients)
-	total := len(s.clients)
+	clients := slices.Collect(maps.Values(s.clients))
 	s.mux.Unlock()
 
-	s.logger.Info("draining clients", slog.Int("total", total))
+	s.logger.Info("draining clients", slog.Int("total", len(clients)))
 
 	// Disconnect all clients
 	ctx := context.Background()
