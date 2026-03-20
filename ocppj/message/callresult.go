@@ -31,10 +31,10 @@ func ParseCallResult(parts []json.RawMessage) (CallResult, error) {
 		return CallResult{}, fmt.Errorf("invalid message type id: %v", messageTypeID)
 	}
 
-	var cr CallResult
-	if err := json.Unmarshal(parts[1], &cr.MessageID); err != nil {
+	var callResult CallResult
+	if err := json.Unmarshal(parts[1], &callResult.MessageID); err != nil {
 		return CallResult{}, err
 	}
-	cr.Payload = parts[2]
-	return cr, nil
+	callResult.Payload = parts[2]
+	return callResult, nil
 }

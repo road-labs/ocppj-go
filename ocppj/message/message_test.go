@@ -50,6 +50,33 @@ func TestBuildMessageFromJSON(t *testing.T) {
 		})
 	})
 
+	t.Run("valid CallResultError message", func(t *testing.T) {
+		t.Parallel()
+
+		data := []byte(`[5,"1","GenericError","error",{"foo":"bar"}]`)
+		msg, err := message.FromJSON(data)
+		assert.Nil(t, err)
+		assert.Equal(t, msg.(message.CallResultError), message.CallResultError{
+			MessageID:        "1",
+			ErrorCode:        "GenericError",
+			ErrorDescription: "error",
+			ErrorDetails:     []byte(`{"foo":"bar"}`),
+		})
+	})
+
+	t.Run("valid Send message", func(t *testing.T) {
+		t.Parallel()
+
+		data := []byte(`[6,"1","DataTransfer",{"foo":"bar"}]`)
+		msg, err := message.FromJSON(data)
+		assert.Nil(t, err)
+		assert.Equal(t, msg.(message.Send), message.Send{
+			MessageID: "1",
+			Action:    "DataTransfer",
+			Payload:   []byte(`{"foo":"bar"}`),
+		})
+	})
+
 	t.Run("invalid messages", func(t *testing.T) {
 		t.Parallel()
 
@@ -86,6 +113,16 @@ func TestBuildMessageFromJSON(t *testing.T) {
 			{
 				name:          "missing element of call",
 				data:          []byte(`[2,"1","GetConfiguration"]`),
+				expectedError: message.ErrInvalidPayload,
+			},
+			{
+				name:          "missing element of CallResultError",
+				data:          []byte(`[5,"1","GenericError","error"]`),
+				expectedError: message.ErrInvalidPayload,
+			},
+			{
+				name:          "missing element of Send",
+				data:          []byte(`[6,"1","DataTransfer"]`),
 				expectedError: message.ErrInvalidPayload,
 			},
 			{

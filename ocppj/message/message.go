@@ -22,9 +22,11 @@ var (
 )
 
 const (
-	TypeCall       Type = 2
-	TypeCallResult Type = 3
-	TypeCallError  Type = 4
+	TypeCall            Type = 2
+	TypeCallResult      Type = 3
+	TypeCallError       Type = 4
+	TypeCallResultError Type = 5
+	TypeSend            Type = 6
 )
 
 type Message any
@@ -34,6 +36,8 @@ type Message any
 // - Call
 // - CallResult
 // - CallError
+// - CallResultError
+// - Send
 func FromJSON(data []byte) (Message, error) {
 	if !utf8.Valid(data) {
 		return nil, fmt.Errorf("message cannot be parsed: %w", ErrInvalidUTF8)
@@ -64,6 +68,10 @@ func FromJSON(data []byte) (Message, error) {
 		msg, err = ParseCallResult(parts)
 	case TypeCallError:
 		msg, err = ParseCallError(parts)
+	case TypeCallResultError:
+		msg, err = ParseCallResultError(parts)
+	case TypeSend:
+		msg, err = ParseSend(parts)
 	default:
 		return nil, fmt.Errorf("failed to handle message type %v: %w", messageTypeID, ErrUnknownMessageType)
 	}

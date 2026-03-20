@@ -30,12 +30,6 @@ type CallError struct {
 	ErrorDetails     json.RawMessage
 }
 
-type CallErrorPayload struct {
-	ErrorCode        string          `json:"errorCode"`
-	ErrorDescription string          `json:"errorDescription"`
-	ErrorDetails     json.RawMessage `json:"errorDetails"`
-}
-
 func (c CallError) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]any{
 		TypeCallError,
