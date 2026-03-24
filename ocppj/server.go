@@ -5,9 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"maps"
 	"net/http"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -211,7 +209,10 @@ func (s *Server) selectProtocol(requestedProtocols string) (string, error) {
 
 func (s *Server) drainClients() {
 	s.mux.Lock()
-	clients := slices.Collect(maps.Values(s.clients))
+	clients := make([]*Client, 0, len(s.clients))
+	for _, client := range s.clients {
+		clients = append(clients, client)
+	}
 	s.mux.Unlock()
 
 	s.logger.Info("draining clients", slog.Int("total", len(clients)))
