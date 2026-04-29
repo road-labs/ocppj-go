@@ -84,6 +84,34 @@ func (mr *MockClientHooksMockRecorder) OnCallRead(arg0, arg1, arg2 any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnCallRead", reflect.TypeOf((*MockClientHooks)(nil).OnCallRead), arg0, arg1, arg2)
 }
 
+// OnCallResultErrorRead mocks base method.
+func (m *MockClientHooks) OnCallResultErrorRead(arg0 context.Context, arg1 *ocppj.Client, arg2 message.CallResultError) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OnCallResultErrorRead", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OnCallResultErrorRead indicates an expected call of OnCallResultErrorRead.
+func (mr *MockClientHooksMockRecorder) OnCallResultErrorRead(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnCallResultErrorRead", reflect.TypeOf((*MockClientHooks)(nil).OnCallResultErrorRead), arg0, arg1, arg2)
+}
+
+// OnCallResultErrorWritten mocks base method.
+func (m *MockClientHooks) OnCallResultErrorWritten(arg0 context.Context, arg1 *ocppj.Client, arg2 message.CallResultError) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OnCallResultErrorWritten", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OnCallResultErrorWritten indicates an expected call of OnCallResultErrorWritten.
+func (mr *MockClientHooksMockRecorder) OnCallResultErrorWritten(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnCallResultErrorWritten", reflect.TypeOf((*MockClientHooks)(nil).OnCallResultErrorWritten), arg0, arg1, arg2)
+}
+
 // OnCallResultRead mocks base method.
 func (m *MockClientHooks) OnCallResultRead(arg0 context.Context, arg1 *ocppj.Client, arg2 message.CallResult) error {
 	m.ctrl.T.Helper()
@@ -138,4 +166,32 @@ func (m *MockClientHooks) OnInvalidMessageRead(arg0 context.Context, arg1 *ocppj
 func (mr *MockClientHooksMockRecorder) OnInvalidMessageRead(arg0, arg1, arg2, arg3 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnInvalidMessageRead", reflect.TypeOf((*MockClientHooks)(nil).OnInvalidMessageRead), arg0, arg1, arg2, arg3)
+}
+
+// OnSendRead mocks base method.
+func (m *MockClientHooks) OnSendRead(arg0 context.Context, arg1 *ocppj.Client, arg2 message.Send) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OnSendRead", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OnSendRead indicates an expected call of OnSendRead.
+func (mr *MockClientHooksMockRecorder) OnSendRead(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnSendRead", reflect.TypeOf((*MockClientHooks)(nil).OnSendRead), arg0, arg1, arg2)
+}
+
+// OnSendWritten mocks base method.
+func (m *MockClientHooks) OnSendWritten(arg0 context.Context, arg1 *ocppj.Client, arg2 message.Send) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "OnSendWritten", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// OnSendWritten indicates an expected call of OnSendWritten.
+func (mr *MockClientHooksMockRecorder) OnSendWritten(arg0, arg1, arg2 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnSendWritten", reflect.TypeOf((*MockClientHooks)(nil).OnSendWritten), arg0, arg1, arg2)
 }

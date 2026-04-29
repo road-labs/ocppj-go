@@ -7,25 +7,32 @@ import (
 )
 
 type ClientHooks interface {
-	// OnCallRead is invoked when a client reads a message from the other party. A reply will typically need to be sent;
-	// this can be achieved by calling WriteCall() on the supplied client.
+	// OnCallRead is invoked when a client reads a "call" message from the other party. A reply will typically need to be
+	// sent; this can be achieved by calling WriteCallResult() or WriteCallError() on the supplied client.
 	OnCallRead(context.Context, *Client, message.Call) error
-	// OnCallResultRead is invoked when a client reads a call reply from the other party.
+	// OnCallResultRead is invoked when a client reads a "call result" message from the other party. In OCPP >= 2.1 this
+	// can be replied to with a call result error, if necessary.
 	OnCallResultRead(context.Context, *Client, message.CallResult) error
-	// OnCallErrorRead is invoked when a client reads a call error from the other party.
+	// OnCallErrorRead is invoked when a client reads a "call error" message from the other party.
 	OnCallErrorRead(context.Context, *Client, message.CallError) error
+	// OnCallResultErrorRead is invoked when a client reads a "call result error" message from the other party.
+	OnCallResultErrorRead(context.Context, *Client, message.CallResultError) error
+	// OnSendRead is invoked when a client reads a "send" message from the other party. No reply is expected.
+	OnSendRead(context.Context, *Client, message.Send) error
 	// OnInvalidMessageRead is invoked when the client receives a message that cannot be parsed into a valid OCPP-J
 	// message. Common reasons for this include invalid JSON, and the payload including invalid UTF-8. Note that the
-	// behaviour within the read loop is to simply skip past such messages; if there is a desire to disconnect the
-	// client instead, the hook implementation should call Close() on the supplied Client instance.
+	// behaviour within the read loop is to simply skip past such messages; if there is a desire to do anything else,
+	// this should be handled within the hook.
 	OnInvalidMessageRead(context.Context, *Client, []byte, error) error
 	// OnCallWritten is invoked when the client writes a call. This can be useful for logging, etc, particularly when
 	// the WriteCall() function can end up being called from multiple contexts.
 	OnCallWritten(context.Context, *Client, message.Call) error
-	// OnCallResultWritten is invoked when the client writes a call result. This can be useful for logging, etc,
-	// particularly when the WriteCallResult() function can end up being called from multiple contexts.
+	// OnCallResultWritten is invoked when the client writes a call result.
 	OnCallResultWritten(context.Context, *Client, message.CallResult) error
-	// OnCallErrorWritten is invoked when the client writes a call error. This can be useful for logging, etc,
-	// particularly when the WriteCallError() function can end up being called from multiple contexts.
+	// OnCallErrorWritten is invoked when the client writes a call error.
 	OnCallErrorWritten(context.Context, *Client, message.CallError) error
+	// OnCallResultErrorWritten is invoked when the client writes a call result error.
+	OnCallResultErrorWritten(context.Context, *Client, message.CallResultError) error
+	// OnSendWritten is invoked when the client writes a send.
+	OnSendWritten(context.Context, *Client, message.Send) error
 }

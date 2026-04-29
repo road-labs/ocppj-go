@@ -33,14 +33,14 @@ func ParseCall(parts []json.RawMessage) (Call, error) {
 		return Call{}, fmt.Errorf("invalid message type id: %v", messageTypeID)
 	}
 
-	var c Call
-	if err := json.Unmarshal(parts[1], &c.MessageID); err != nil {
+	var call Call
+	if err := json.Unmarshal(parts[1], &call.MessageID); err != nil {
 		return Call{}, err
 	}
-	if err := json.Unmarshal(parts[2], &c.Action); err != nil {
+	if err := json.Unmarshal(parts[2], &call.Action); err != nil {
 		return Call{}, err
 	}
-	c.Payload = parts[3]
+	call.Payload = parts[3]
 
-	return c, nil
+	return call, nil
 }

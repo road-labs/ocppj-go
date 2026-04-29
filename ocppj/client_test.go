@@ -443,6 +443,65 @@ func TestClient_RateLimit_ReturnRateLimitCall(t *testing.T) {
 	wg.Wait()
 }
 
+func TestClient_WriteCallResultError(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx := context.Background()
+
+	wsClient := mocks.NewMockWebsocketClient(ctrl)
+	wsClient.EXPECT().Write(websocket.TextMessage([]byte(`[5,"message-1","GenericError","error description",{"foo":"bar"}]`))).Return(nil)
+
+	clientHooks := mocks.NewMockClientHooks(ctrl)
+	clientHooks.EXPECT().OnCallResultErrorWritten(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	client, err := ocppj.Open(
+		ctx,
+		"ws://localhost",
+		clientHooks,
+		clientopt.WithWebsocketClient(wsClient),
+		clientopt.WithCallTimeout(time.Minute),
+	)
+	require.NoError(t, err)
+
+	err = client.WriteCallResultError(ctx, message.CallResultError{
+		MessageID:        "message-1",
+		ErrorCode:        "GenericError",
+		ErrorDescription: "error description",
+		ErrorDetails:     json.RawMessage(`{"foo":"bar"}`),
+	})
+	assert.NoError(t, err)
+}
+
+func TestClient_WriteSend(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx := context.Background()
+
+	wsClient := mocks.NewMockWebsocketClient(ctrl)
+	wsClient.EXPECT().Write(websocket.TextMessage([]byte(`[6,"message-1","DataTransfer",{"foo":"bar"}]`))).Return(nil)
+
+	clientHooks := mocks.NewMockClientHooks(ctrl)
+	clientHooks.EXPECT().OnSendWritten(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+	client, err := ocppj.Open(
+		ctx,
+		"ws://localhost",
+		clientHooks,
+		clientopt.WithWebsocketClient(wsClient),
+		clientopt.WithCallTimeout(time.Minute),
+	)
+	require.NoError(t, err)
+
+	err = client.WriteSend(ctx, message.Send{
+		MessageID: "message-1",
+		Action:    "DataTransfer",
+		Payload:   json.RawMessage(`{"foo":"bar"}`),
+	})
+	assert.NoError(t, err)
+}
+
 func TestClient_RateLimit_ReturnRateLimitCallResult(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()

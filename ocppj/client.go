@@ -184,15 +184,25 @@ func (c *Client) Read(ctx context.Context) error {
 		case message.CallResult:
 			c.logger.Debug("call result received", slog.String("client", c.id), slog.Any("payload", m))
 			if err = c.hooks.OnCallResultRead(ctx, c, m); err != nil {
-				c.logger.Error("call result handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("callresult", m))
+				c.logger.Error("call result handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("callResult", m))
 			}
 			isReply = true
 		case message.CallError:
 			c.logger.Debug("call error received", slog.String("client", c.id), slog.Any("payload", m))
 			if err = c.hooks.OnCallErrorRead(ctx, c, m); err != nil {
-				c.logger.Error("call error handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("callerror", m))
+				c.logger.Error("call error handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("callError", m))
 			}
 			isReply = true
+		case message.CallResultError:
+			c.logger.Debug("call result error received", slog.String("client", c.id), slog.Any("payload", m))
+			if err = c.hooks.OnCallResultErrorRead(ctx, c, m); err != nil {
+				c.logger.Error("call result error handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("callResultError", m))
+			}
+		case message.Send:
+			c.logger.Debug("send received", slog.String("client", c.id), slog.Any("payload", m))
+			if err = c.hooks.OnSendRead(ctx, c, m); err != nil {
+				c.logger.Error("send handling failed", slog.Any("error", err), slog.String("client", c.id), slog.Any("send", m))
+			}
 		}
 
 		if isReply {
@@ -253,6 +263,30 @@ func (c *Client) WriteCallError(ctx context.Context, callError message.CallError
 	}
 	if err := c.hooks.OnCallErrorWritten(ctx, c, callError); err != nil {
 		return fmt.Errorf("failed to invoke call error written hook: %w", err)
+	}
+	return nil
+}
+
+// WriteCallResultError writes a Call Result Error type message.
+func (c *Client) WriteCallResultError(ctx context.Context, callResultError message.CallResultError) error {
+	c.logger.Debug("sending call result error", slog.String("client", c.id), slog.Any("payload", callResultError))
+	if err := c.writeMessage(callResultError); err != nil {
+		return fmt.Errorf("failed to write call result error: %w", err)
+	}
+	if err := c.hooks.OnCallResultErrorWritten(ctx, c, callResultError); err != nil {
+		return fmt.Errorf("failed to invoke call result error written hook: %w", err)
+	}
+	return nil
+}
+
+// WriteSend dispatches a send to the other party.
+func (c *Client) WriteSend(ctx context.Context, send message.Send) error {
+	c.logger.Debug("sending send", slog.String("client", c.id), slog.Any("payload", send))
+	if err := c.writeMessage(send); err != nil {
+		return fmt.Errorf("failed to write send: %w", err)
+	}
+	if err := c.hooks.OnSendWritten(ctx, c, send); err != nil {
+		return fmt.Errorf("failed to invoke send written hook: %w", err)
 	}
 	return nil
 }
