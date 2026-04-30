@@ -30,13 +30,13 @@ type CallError struct {
 	ErrorDetails     json.RawMessage
 }
 
-func (c CallError) MarshalJSON() ([]byte, error) {
+func (ce CallError) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]any{
 		TypeCallError,
-		c.MessageID,
-		c.ErrorCode,
-		c.ErrorDescription,
-		c.ErrorDetails,
+		ce.MessageID,
+		ce.ErrorCode,
+		ce.ErrorDescription,
+		ce.ErrorDetails,
 	})
 }
 

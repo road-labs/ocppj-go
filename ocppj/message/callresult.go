@@ -10,11 +10,11 @@ type CallResult struct {
 	Payload   json.RawMessage
 }
 
-func (c CallResult) MarshalJSON() ([]byte, error) {
+func (cr CallResult) MarshalJSON() ([]byte, error) {
 	return json.Marshal([]any{
 		TypeCallResult,
-		c.MessageID,
-		c.Payload,
+		cr.MessageID,
+		cr.Payload,
 	})
 }
 

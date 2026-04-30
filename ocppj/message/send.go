@@ -33,14 +33,14 @@ func ParseSend(parts []json.RawMessage) (Send, error) {
 		return Send{}, fmt.Errorf("invalid message type id: %v", messageTypeID)
 	}
 
-	var s Send
-	if err := json.Unmarshal(parts[1], &s.MessageID); err != nil {
+	var send Send
+	if err := json.Unmarshal(parts[1], &send.MessageID); err != nil {
 		return Send{}, err
 	}
-	if err := json.Unmarshal(parts[2], &s.Action); err != nil {
+	if err := json.Unmarshal(parts[2], &send.Action); err != nil {
 		return Send{}, err
 	}
-	s.Payload = parts[3]
+	send.Payload = parts[3]
 
-	return s, nil
+	return send, nil
 }
