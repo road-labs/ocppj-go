@@ -1,24 +1,25 @@
 # ocppj-go
 
-Go implementation of the OCPP-J "JSON over WebSockets" specification. This package covers the base level implementation,
-including:
+Go implementation of the OCPP-J "JSON over WebSockets" specification.
 
-- client to client communication over WebSockets, using either plaintext or TLS
-- serialization/deserialization of message payloads, including general validation of the contents
-- synchronicity enforcement, guaranteeing that only one outbound message is active at any point in time (both on the
-sending and receiving ends)
+## Features
+
+This package handles a base level OCPP-J implementation, including:
+
+- Client and server communication over WebSockets, using either plaintext or TLS
+- Serialization and parsing of the OCPP-J message envelopes, with basic validation
+- Synchronicity enforcement, so that only one outbound call can be in flight at a time in either direction
 
 The code looks to be open to forward extension and not pinned to any specific OCPP versions.
 
-## Overview
+## Usage
 
-This package covers both client and server implementations of the OCPP-J protocol. From a usage perspective, the client
-implementation can be used for charging station simulation type use cases, and the server implementation can be used
-as the basic rails to build an OCPP backend.
+This package covers both client and server implementations of the OCPP-J protocol. The client implementation can be used
+to establish connections to an OCPP server, which can be useful for implementing charging station simulators, etc. The
+server implementation provides the plumbing to build out an OCPP backend.
 
-## Examples
-
-See below for basic client and server examples.
+Callers wire in client and server behaviour through hooks. `ocppj.ClientHooks` covers read and write of each message
+type per-client, and `ocppj.ServerHooks` covers the upgrade and connection lifecycle.
 
 ### Client
 
@@ -41,12 +42,10 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
 	defer cancel()
 
-	hooks := &clientHooks{}
-
 	client, err := ocppj.Open(
 		ctx,
 		"ws://localhost:2600/ChargeStationFoo",
-		hooks,
+		&clientHooks{},
 		clientopt.WithSupportedProtocols([]string{"ocpp1.6"}),
 		clientopt.WithWebsocketPingInternal(time.Minute),
 	)
@@ -67,55 +66,7 @@ func (c *clientHooks) OnCallRead(ctx context.Context, client *ocppj.Client, call
 	return nil
 }
 
-func (c *clientHooks) OnCallResultRead(ctx context.Context, client *ocppj.Client, callResult message.CallResult) error {
-	// TODO: handle Call Result read
-	return nil
-}
-
-func (c *clientHooks) OnCallErrorRead(ctx context.Context, client *ocppj.Client, callError message.CallError) error {
-	// TODO: handle Call Error read
-	return nil
-}
-
-func (c *clientHooks) OnCallResultErrorRead(ctx context.Context, client *ocppj.Client, callResultError message.CallResultError) error {
-	// TODO: handle Call Result Error read
-	return nil
-}
-
-func (c *clientHooks) OnSendRead(ctx context.Context, client *ocppj.Client, send message.Send) error {
-	// TODO: handle Send read
-	return nil
-}
-
-func (c *clientHooks) OnInvalidMessageRead(ctx context.Context, client *ocppj.Client, bytes []byte, err error) error {
-	// TODO: handle invalid message read
-	return nil
-}
-
-func (c *clientHooks) OnCallWritten(ctx context.Context, client *ocppj.Client, call message.Call) error {
-	// TODO: handle Call written
-	return nil
-}
-
-func (c *clientHooks) OnCallResultWritten(ctx context.Context, client *ocppj.Client, result message.CallResult) error {
-	// TODO: handle Call Result written
-	return nil
-}
-
-func (c *clientHooks) OnCallErrorWritten(ctx context.Context, client *ocppj.Client, callError message.CallError) error {
-	// TODO: handle Call Error written
-	return nil
-}
-
-func (c *clientHooks) OnCallResultErrorWritten(ctx context.Context, client *ocppj.Client, callResultError message.CallResultError) error {
-	// TODO: handle Call Result Error written
-	return nil
-}
-
-func (c *clientHooks) OnSendWritten(ctx context.Context, client *ocppj.Client, send message.Send) error {
-	// TODO: handle Send written
-	return nil
-}
+// The remaining ocppj.ClientHooks methods are omitted for brevity. See the interface for the full set.
 ```
 
 ### Server
@@ -149,12 +100,9 @@ func main() {
 		}),
 	)
 
-	sHooks := &serverHooks{}
-	cHooks := &clientHooks{}
-
 	server, err := ocppj.NewServer(
-		sHooks,
-		cHooks,
+		&serverHooks{},
+		&clientHooks{},
 		serveropt.WithPort(2600),
 		serveropt.WithSupportedProtocols([]string{"ocpp1.6", "ocpp2.0.1"}),
 		serveropt.WithUpgradePath("/{ocppIdentity}"),
@@ -167,6 +115,7 @@ func main() {
 	_ = server.Start(ctx)
 }
 
+// serverHooks handle upgrade requests and client connections/disconnections.
 type serverHooks struct{}
 
 func (s *serverHooks) OnUpgradeRequested(ctx context.Context, req *http.Request, selectedProtocol string) (*ocppj.UpgradeRequestResult, error) {
@@ -185,60 +134,25 @@ func (s *serverHooks) OnClientDisconnected(ctx context.Context, client *ocppj.Cl
 	return nil
 }
 
+// clientHooks implements ocppj.ClientHooks, receiving messages read from each connected client.
 type clientHooks struct{}
 
 func (c *clientHooks) OnCallRead(ctx context.Context, client *ocppj.Client, call message.Call) error {
-	// TODO: handle Call read
+	// Reply via client.WriteCallResult or client.WriteCallError.
 	return nil
 }
 
-func (c *clientHooks) OnCallResultRead(ctx context.Context, client *ocppj.Client, callResult message.CallResult) error {
-	// TODO: handle Call Result read
-	return nil
-}
-
-func (c *clientHooks) OnCallErrorRead(ctx context.Context, client *ocppj.Client, callError message.CallError) error {
-	// TODO: handle Call Error read
-	return nil
-}
-
-func (c *clientHooks) OnCallResultErrorRead(ctx context.Context, client *ocppj.Client, callResultError message.CallResultError) error {
-	// TODO: handle Call Result Error read
-	return nil
-}
-
-func (c *clientHooks) OnSendRead(ctx context.Context, client *ocppj.Client, send message.Send) error {
-	// TODO: handle Send read
-	return nil
-}
-
-func (c *clientHooks) OnInvalidMessageRead(ctx context.Context, client *ocppj.Client, bytes []byte, err error) error {
-	// TODO: handle invalid message read
-	return nil
-}
-
-func (c *clientHooks) OnCallWritten(ctx context.Context, client *ocppj.Client, call message.Call) error {
-	// TODO: handle Call written
-	return nil
-}
-
-func (c *clientHooks) OnCallResultWritten(ctx context.Context, client *ocppj.Client, result message.CallResult) error {
-	// TODO: handle Call Result written
-	return nil
-}
-
-func (c *clientHooks) OnCallErrorWritten(ctx context.Context, client *ocppj.Client, callError message.CallError) error {
-	// TODO: handle Call Error written
-	return nil
-}
-
-func (c *clientHooks) OnCallResultErrorWritten(ctx context.Context, client *ocppj.Client, callResultError message.CallResultError) error {
-	// TODO: handle Call Result Error written
-	return nil
-}
-
-func (c *clientHooks) OnSendWritten(ctx context.Context, client *ocppj.Client, send message.Send) error {
-	// TODO: handle Send written
-	return nil
-}
+// The remaining ocppj.ClientHooks methods are omitted for brevity. See the interface for the full set.
 ```
+
+## Testing
+
+```sh
+go test ./...
+```
+
+Mocks are generated with [`mockgen`](https://github.com/uber-go/mock). See `Taskfile.yaml` for the generation commands.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
