@@ -47,7 +47,7 @@ func main() {
 		"ws://localhost:2600/ChargeStationFoo",
 		&clientHooks{},
 		clientopt.WithSupportedProtocols([]string{"ocpp1.6"}),
-		clientopt.WithWebsocketPingInternal(time.Minute),
+		clientopt.WithWebsocketPingInterval(time.Minute),
 	)
 	if err != nil {
 		log.Fatal(err)

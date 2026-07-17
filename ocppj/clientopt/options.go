@@ -60,9 +60,9 @@ func WithWebsocketWriteTimeout(timeout time.Duration) ocppj.ClientOption {
 	}
 }
 
-// WithWebsocketPingInternal specifies how often the client should send a websocket ping. This can often be a
+// WithWebsocketPingInterval specifies how often the client should send a websocket ping. This can often be a
 // requirement for maintaining a stable connection to an OCPP backend. The default is 0, which means no pings are sent.
-func WithWebsocketPingInternal(interval time.Duration) ocppj.ClientOption {
+func WithWebsocketPingInterval(interval time.Duration) ocppj.ClientOption {
 	return func(c *ocppj.ClientConfig) {
 		c.WebsocketPingInterval = interval
 	}
