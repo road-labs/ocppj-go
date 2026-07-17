@@ -33,9 +33,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/e-flux-platform/ocppj-go/ocppj"
-	"github.com/e-flux-platform/ocppj-go/ocppj/clientopt"
-	"github.com/e-flux-platform/ocppj-go/ocppj/message"
+	"github.com/road-labs/ocppj-go/ocppj"
+	"github.com/road-labs/ocppj-go/ocppj/clientopt"
+	"github.com/road-labs/ocppj-go/ocppj/message"
 )
 
 func main() {
@@ -83,11 +83,11 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/e-flux-platform/ocppj-go/ocppj"
-	"github.com/e-flux-platform/ocppj-go/ocppj/message"
-	"github.com/e-flux-platform/ocppj-go/ocppj/serveropt"
-	"github.com/e-flux-platform/ocppj-go/websocket"
-	"github.com/e-flux-platform/ocppj-go/websocket/upgraderopt"
+	"github.com/road-labs/ocppj-go/ocppj"
+	"github.com/road-labs/ocppj-go/ocppj/message"
+	"github.com/road-labs/ocppj-go/ocppj/serveropt"
+	"github.com/road-labs/ocppj-go/websocket"
+	"github.com/road-labs/ocppj-go/websocket/upgraderopt"
 )
 
 func main() {

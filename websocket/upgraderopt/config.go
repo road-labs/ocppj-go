@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/e-flux-platform/ocppj-go/websocket"
+	"github.com/road-labs/ocppj-go/websocket"
 )
 
 // WithOriginCheck configures an origin check function to be used by the websocket upgrader.

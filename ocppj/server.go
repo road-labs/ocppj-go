@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/e-flux-platform/ocppj-go/websocket"
+	"github.com/road-labs/ocppj-go/websocket"
 )
 
 const secWebsocketProtocolHeader = "Sec-WebSocket-Protocol"

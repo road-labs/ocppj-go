@@ -13,8 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	ocppj "github.com/e-flux-platform/ocppj-go/ocppj"
-	message "github.com/e-flux-platform/ocppj-go/ocppj/message"
+	ocppj "github.com/road-labs/ocppj-go/ocppj"
+	message "github.com/road-labs/ocppj-go/ocppj/message"
 	gomock "go.uber.org/mock/gomock"
 )
 

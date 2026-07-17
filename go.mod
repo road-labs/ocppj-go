@@ -1,4 +1,4 @@
-module github.com/e-flux-platform/ocppj-go
+module github.com/road-labs/ocppj-go
 
 go 1.26
 

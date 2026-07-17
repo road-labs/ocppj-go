@@ -14,7 +14,7 @@ import (
 	net "net"
 	reflect "reflect"
 
-	websocket "github.com/e-flux-platform/ocppj-go/websocket"
+	websocket "github.com/road-labs/ocppj-go/websocket"
 	gomock "go.uber.org/mock/gomock"
 )
 

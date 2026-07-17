@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/e-flux-platform/ocppj-go/ocppj/message"
+	"github.com/road-labs/ocppj-go/ocppj/message"
 )
 
 func TestBuildMessageFromJSON(t *testing.T) {

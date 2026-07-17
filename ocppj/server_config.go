@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/e-flux-platform/ocppj-go/websocket"
+	"github.com/road-labs/ocppj-go/websocket"
 )
 
 type ServerConfig struct {

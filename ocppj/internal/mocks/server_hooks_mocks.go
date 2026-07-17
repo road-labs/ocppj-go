@@ -14,7 +14,7 @@ import (
 	http "net/http"
 	reflect "reflect"
 
-	ocppj "github.com/e-flux-platform/ocppj-go/ocppj"
+	ocppj "github.com/road-labs/ocppj-go/ocppj"
 	gomock "go.uber.org/mock/gomock"
 )
 

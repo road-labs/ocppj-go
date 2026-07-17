@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"github.com/e-flux-platform/ocppj-go/ocppj"
-	"github.com/e-flux-platform/ocppj-go/ocppj/clientopt"
-	"github.com/e-flux-platform/ocppj-go/ocppj/internal/mocks"
-	"github.com/e-flux-platform/ocppj-go/ocppj/message"
-	"github.com/e-flux-platform/ocppj-go/websocket"
+	"github.com/road-labs/ocppj-go/ocppj"
+	"github.com/road-labs/ocppj-go/ocppj/clientopt"
+	"github.com/road-labs/ocppj-go/ocppj/internal/mocks"
+	"github.com/road-labs/ocppj-go/ocppj/message"
+	"github.com/road-labs/ocppj-go/websocket"
 )
 
 type event struct {

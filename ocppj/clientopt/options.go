@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/e-flux-platform/ocppj-go/ocppj"
+	"github.com/road-labs/ocppj-go/ocppj"
 )
 
 // WithCallTimeout specifies how long to wait for a reply to an outbound call before it is treated as lost. If not set,

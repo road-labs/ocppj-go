@@ -12,12 +12,12 @@ import (
 	"go.uber.org/mock/gomock"
 	"golang.org/x/time/rate"
 
-	"github.com/e-flux-platform/ocppj-go/ocppj"
-	"github.com/e-flux-platform/ocppj-go/ocppj/clientopt"
-	"github.com/e-flux-platform/ocppj-go/ocppj/internal/mocks"
-	"github.com/e-flux-platform/ocppj-go/ocppj/message"
-	"github.com/e-flux-platform/ocppj-go/ocppj/serveropt"
-	"github.com/e-flux-platform/ocppj-go/websocket"
+	"github.com/road-labs/ocppj-go/ocppj"
+	"github.com/road-labs/ocppj-go/ocppj/clientopt"
+	"github.com/road-labs/ocppj-go/ocppj/internal/mocks"
+	"github.com/road-labs/ocppj-go/ocppj/message"
+	"github.com/road-labs/ocppj-go/ocppj/serveropt"
+	"github.com/road-labs/ocppj-go/websocket"
 )
 
 const (
@@ -27,7 +27,7 @@ const (
 
 var defaultRateLimiter = rate.NewLimiter(rate.Every(time.Second), 1000000)
 
-// go test -benchmem -benchtime 5000x -run=^$ -bench ^BenchmarkServer_OpenClients$ github.com/e-flux-platform/ocppj-go/ocppj
+// go test -benchmem -benchtime 5000x -run=^$ -bench ^BenchmarkServer_OpenClients$ github.com/road-labs/ocppj-go/ocppj
 func BenchmarkServer_OpenClients(b *testing.B) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -89,7 +89,7 @@ func BenchmarkServer_OpenClients(b *testing.B) {
 	slog.Info("all clients connected")
 }
 
-// go test -benchmem -benchtime 5000x -run=^$ -bench ^BenchmarkServer_OpenClients_WithRateLimiter$ github.com/e-flux-platform/ocppj-go/ocppj
+// go test -benchmem -benchtime 5000x -run=^$ -bench ^BenchmarkServer_OpenClients_WithRateLimiter$ github.com/road-labs/ocppj-go/ocppj
 func BenchmarkServer_OpenClients_WithRateLimiter(b *testing.B) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -157,7 +157,7 @@ func BenchmarkServer_OpenClients_WithRateLimiter(b *testing.B) {
 	slog.Info("all clients connected")
 }
 
-// go test -benchmem -benchtime 10000x -run=^$ -bench ^BenchmarkServer_SendMessages$ github.com/e-flux-platform/ocppj-go/ocppj
+// go test -benchmem -benchtime 10000x -run=^$ -bench ^BenchmarkServer_SendMessages$ github.com/road-labs/ocppj-go/ocppj
 func BenchmarkServer_SendMessages(b *testing.B) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -244,7 +244,7 @@ func BenchmarkServer_SendMessages(b *testing.B) {
 	slog.Info("all clients received messages")
 }
 
-// go test -benchmem -benchtime 10000x -run=^$ -bench ^BenchmarkServer_SendMessages_WithRateLimiter$ github.com/e-flux-platform/ocppj-go/ocppj
+// go test -benchmem -benchtime 10000x -run=^$ -bench ^BenchmarkServer_SendMessages_WithRateLimiter$ github.com/road-labs/ocppj-go/ocppj
 func BenchmarkServer_SendMessages_WithRateLimiter(b *testing.B) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -13,9 +13,9 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/e-flux-platform/ocppj-go/ocppj/message"
-	"github.com/e-flux-platform/ocppj-go/websocket"
-	wsclientopt "github.com/e-flux-platform/ocppj-go/websocket/clientopt"
+	"github.com/road-labs/ocppj-go/ocppj/message"
+	"github.com/road-labs/ocppj-go/websocket"
+	wsclientopt "github.com/road-labs/ocppj-go/websocket/clientopt"
 )
 
 // Client represents a client party in the OCPP-J context. It can be used from both the client and server context, i.e:

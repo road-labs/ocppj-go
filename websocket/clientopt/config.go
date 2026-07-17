@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"time"
 
-	"github.com/e-flux-platform/ocppj-go/websocket"
+	"github.com/road-labs/ocppj-go/websocket"
 )
 
 // WithSubprotocols configures the subprotocols that will be offered by the client.
