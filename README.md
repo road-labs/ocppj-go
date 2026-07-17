@@ -5,25 +5,16 @@ including:
 
 - client to client communication over WebSockets, using either plaintext or TLS
 - serialization/deserialization of message payloads, including general validation of the contents
-- synchronicity enforcement, which guarantees only one outbound message is active at any point in time (both on the
+- synchronicity enforcement, guaranteeing that only one outbound message is active at any point in time (both on the
 sending and receiving ends)
 
-The implementation looks to be open to forward extension, and not pinned to any specific OCPP versions.
+The code looks to be open to forward extension and not pinned to any specific OCPP versions.
 
 ## Overview
 
 This package covers both client and server implementations of the OCPP-J protocol. From a usage perspective, the client
-implementation can be used for charging station simulation type usecases, and the server implementation can be used
+implementation can be used for charging station simulation type use cases, and the server implementation can be used
 as the basic rails to build an OCPP backend.
-
-There are certain "non-goals" for this project, namely:
-
-- there is no intention for this to be a framework for OCPP/CSMS implementations. There is a general preference towards
-simplicity and flexibility, rather than offering a fully fledged OCPP stack
-- the implementation does not look to handle OCPP version specific payloads - these are passed on to the hook
-implementations to deal with decoding, handling, etc. There is a tendency to find stations that are non-compliant to
-OCPP in the wild, and whilst the temptation is to simply reject payloads from such stations, sometimes there is a need
-to be pragmatic and support them.
 
 ## Examples
 
@@ -86,6 +77,16 @@ func (c *clientHooks) OnCallErrorRead(ctx context.Context, client *ocppj.Client,
 	return nil
 }
 
+func (c *clientHooks) OnCallResultErrorRead(ctx context.Context, client *ocppj.Client, callResultError message.CallResultError) error {
+	// TODO: handle Call Result Error read
+	return nil
+}
+
+func (c *clientHooks) OnSendRead(ctx context.Context, client *ocppj.Client, send message.Send) error {
+	// TODO: handle Send read
+	return nil
+}
+
 func (c *clientHooks) OnInvalidMessageRead(ctx context.Context, client *ocppj.Client, bytes []byte, err error) error {
 	// TODO: handle invalid message read
 	return nil
@@ -103,6 +104,16 @@ func (c *clientHooks) OnCallResultWritten(ctx context.Context, client *ocppj.Cli
 
 func (c *clientHooks) OnCallErrorWritten(ctx context.Context, client *ocppj.Client, callError message.CallError) error {
 	// TODO: handle Call Error written
+	return nil
+}
+
+func (c *clientHooks) OnCallResultErrorWritten(ctx context.Context, client *ocppj.Client, callResultError message.CallResultError) error {
+	// TODO: handle Call Result Error written
+	return nil
+}
+
+func (c *clientHooks) OnSendWritten(ctx context.Context, client *ocppj.Client, send message.Send) error {
+	// TODO: handle Send written
 	return nil
 }
 ```
@@ -191,6 +202,16 @@ func (c *clientHooks) OnCallErrorRead(ctx context.Context, client *ocppj.Client,
 	return nil
 }
 
+func (c *clientHooks) OnCallResultErrorRead(ctx context.Context, client *ocppj.Client, callResultError message.CallResultError) error {
+	// TODO: handle Call Result Error read
+	return nil
+}
+
+func (c *clientHooks) OnSendRead(ctx context.Context, client *ocppj.Client, send message.Send) error {
+	// TODO: handle Send read
+	return nil
+}
+
 func (c *clientHooks) OnInvalidMessageRead(ctx context.Context, client *ocppj.Client, bytes []byte, err error) error {
 	// TODO: handle invalid message read
 	return nil
@@ -208,6 +229,16 @@ func (c *clientHooks) OnCallResultWritten(ctx context.Context, client *ocppj.Cli
 
 func (c *clientHooks) OnCallErrorWritten(ctx context.Context, client *ocppj.Client, callError message.CallError) error {
 	// TODO: handle Call Error written
+	return nil
+}
+
+func (c *clientHooks) OnCallResultErrorWritten(ctx context.Context, client *ocppj.Client, callResultError message.CallResultError) error {
+	// TODO: handle Call Result Error written
+	return nil
+}
+
+func (c *clientHooks) OnSendWritten(ctx context.Context, client *ocppj.Client, send message.Send) error {
+	// TODO: handle Send written
 	return nil
 }
 ```

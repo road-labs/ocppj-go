@@ -170,7 +170,6 @@ func (c *Client) Read(ctx context.Context) error {
 
 		if c.hasReachedRateLimit(ctx, msg) {
 			c.handleReachedRateLimit(ctx, msg)
-
 			continue
 		}
 
@@ -217,7 +216,19 @@ func (c *Client) Read(ctx context.Context) error {
 	}
 }
 
-// WriteCall dispatches a call to the other party. It does not wait for a Call Result or Call Error before returning.
+// WriteCall dispatches a call to the other party. It does not wait for a CallResult or CallError before returning.
+// Note, however, that if any calls are already active when WriteCall is invoked, it will block until the existing call
+// has either been replied to or timed out.
+//
+// Also note that if multiple goroutines invoke WriteCall in succession, there are no guarantees of order. For example,
+// given the following sequence of events:
+// - goroutine 1 writes TriggerMessage (1)
+// - TriggerMessage (1) dispatched
+// - goroutine 2 writes TriggerMessage (2)
+// - goroutine 3 writes TriggerMessage (3)
+// - TriggerMessage (1) reply received
+// There is no guarantee that TriggerMessage (2) will be written ahead of TriggerMessage (3). If there is a need for
+// strict ordering, use a buffered channel to feed calls into WriteCall.
 func (c *Client) WriteCall(ctx context.Context, call message.Call) error {
 	c.logger.Debug("sending call", slog.String("client", c.id), slog.Any("payload", call))
 	_, err := c.sendCall(ctx, call, true)
@@ -225,8 +236,9 @@ func (c *Client) WriteCall(ctx context.Context, call message.Call) error {
 }
 
 // SyncWriteCall is a synchronous implementation of WriteCall - it dispatches a Call and then awaits a response. If a
-// Call Result is received, this is returned from the function. If a Call Error is received, this is transformed into a
-// Go flavour error.
+// CallResult is received, this is returned from the function. If a CallError is received, this is transformed into a
+// Go flavour error. The same constraints regarding blocking and ordering apply to SyncWriteCall as they do to
+// WriteCall.
 func (c *Client) SyncWriteCall(ctx context.Context, call message.Call) (message.CallResult, error) {
 	reply, err := c.sendCall(ctx, call, false)
 	if err != nil {
@@ -243,7 +255,7 @@ func (c *Client) SyncWriteCall(ctx context.Context, call message.Call) (message.
 	}
 }
 
-// WriteCallResult writes a Call Result type message.
+// WriteCallResult writes a CallResult type message.
 func (c *Client) WriteCallResult(ctx context.Context, callResult message.CallResult) error {
 	c.logger.Debug("sending call result", slog.String("client", c.id), slog.Any("payload", callResult))
 	if err := c.writeMessage(callResult); err != nil {
@@ -255,7 +267,7 @@ func (c *Client) WriteCallResult(ctx context.Context, callResult message.CallRes
 	return nil
 }
 
-// WriteCallError writes a Call Error type message.
+// WriteCallError writes a CallError type message.
 func (c *Client) WriteCallError(ctx context.Context, callError message.CallError) error {
 	c.logger.Debug("sending call error", slog.String("client", c.id), slog.Any("payload", callError))
 	if err := c.writeMessage(callError); err != nil {
@@ -267,7 +279,7 @@ func (c *Client) WriteCallError(ctx context.Context, callError message.CallError
 	return nil
 }
 
-// WriteCallResultError writes a Call Result Error type message.
+// WriteCallResultError writes a CallResultError type message.
 func (c *Client) WriteCallResultError(ctx context.Context, callResultError message.CallResultError) error {
 	c.logger.Debug("sending call result error", slog.String("client", c.id), slog.Any("payload", callResultError))
 	if err := c.writeMessage(callResultError); err != nil {
