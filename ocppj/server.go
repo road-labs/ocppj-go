@@ -68,7 +68,7 @@ func (s *Server) Start(ctx context.Context) error {
 	eg.Go(func() error {
 		s.logger.Info(
 			"ocpp-j server listening",
-			slog.Any("address", s.conf.ListenAddr),
+			slog.String("address", s.conf.ListenAddr),
 			slog.Bool("tls", s.conf.TLSConfig != nil),
 		)
 		var err error
