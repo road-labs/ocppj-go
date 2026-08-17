@@ -55,7 +55,7 @@ func newServerConfig(opts []ServerOption) *ServerConfig {
 		c.Upgrader = websocket.NewUpgrader()
 	}
 	if c.Logger == nil {
-		c.Logger = slog.New(noopLogger{})
+		c.Logger = slog.New(slog.DiscardHandler)
 	}
 	return c
 }
