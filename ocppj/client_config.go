@@ -35,7 +35,7 @@ func newClientConfig(opts []ClientOption) *ClientConfig {
 		c.Metadata = make(map[string]any)
 	}
 	if c.Logger == nil {
-		c.Logger = slog.New(noopLogger{})
+		c.Logger = slog.New(slog.DiscardHandler)
 	}
 	return c
 }
