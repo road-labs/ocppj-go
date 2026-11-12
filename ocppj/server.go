@@ -144,6 +144,7 @@ func (s *Server) handleUpgrade(w http.ResponseWriter, req *http.Request) {
 			wsClient,
 			s.conf.ClientCallTimeout,
 			s.conf.ClientRateLimiter,
+			s.conf.ClientMaxMessageSize,
 			s.logger,
 		)
 		if err != nil {

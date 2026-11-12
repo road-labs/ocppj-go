@@ -9,17 +9,18 @@ import (
 )
 
 type ServerConfig struct {
-	ListenAddr         string
-	UpgradePath        string
-	HealthPath         string
-	ClientCallTimeout  time.Duration
-	ReadHeaderTimeout  time.Duration
-	TLSConfig          *tls.Config
-	SupportedProtocols []string
-	Upgrader           Upgrader
-	DrainStrategy      DrainStrategy
-	ClientRateLimiter  ClientRateLimiter
-	Logger             *slog.Logger
+	ListenAddr           string
+	UpgradePath          string
+	HealthPath           string
+	ClientCallTimeout    time.Duration
+	ReadHeaderTimeout    time.Duration
+	TLSConfig            *tls.Config
+	SupportedProtocols   []string
+	Upgrader             Upgrader
+	DrainStrategy        DrainStrategy
+	ClientRateLimiter    ClientRateLimiter
+	ClientMaxMessageSize int
+	Logger               *slog.Logger
 }
 
 const (

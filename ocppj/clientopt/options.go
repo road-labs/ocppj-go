@@ -76,6 +76,14 @@ func WithRateLimiter(rl ocppj.ClientRateLimiter) ocppj.ClientOption {
 	}
 }
 
+// WithMaxMessageSize specifies the maximum size, in bytes, of a message read from the other party. Messages exceeding
+// this size are treated as invalid. The default is 0, which means no limit is applied.
+func WithMaxMessageSize(size int) ocppj.ClientOption {
+	return func(c *ocppj.ClientConfig) {
+		c.MaxMessageSize = size
+	}
+}
+
 // WithLogger configures the logger to use for the client instance. If not set, there is no log output.
 func WithLogger(logger *slog.Logger) ocppj.ClientOption {
 	return func(c *ocppj.ClientConfig) {

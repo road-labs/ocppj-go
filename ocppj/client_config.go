@@ -17,6 +17,7 @@ type ClientConfig struct {
 	WebsocketWriteTimeout time.Duration
 	WebsocketPingInterval time.Duration
 	RateLimiter           ClientRateLimiter
+	MaxMessageSize        int
 }
 
 type ClientOption func(*ClientConfig)
