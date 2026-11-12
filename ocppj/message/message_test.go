@@ -15,7 +15,7 @@ func TestBuildMessageFromJSON(t *testing.T) {
 		t.Parallel()
 
 		data := []byte(`[2,"1","GetConfiguration",{"foo":"bar"}]`)
-		msg, err := message.FromJSON(data)
+		msg, err := message.FromJSON(data, 0)
 		assert.Nil(t, err)
 		assert.Equal(t, msg.(message.Call), message.Call{
 			Action:    "GetConfiguration",
@@ -28,7 +28,7 @@ func TestBuildMessageFromJSON(t *testing.T) {
 		t.Parallel()
 
 		data := []byte(`[3,"1",{"foo":"bar"}]`)
-		msg, err := message.FromJSON(data)
+		msg, err := message.FromJSON(data, 0)
 		assert.Nil(t, err)
 		assert.Equal(t, msg.(message.CallResult), message.CallResult{
 			MessageID: "1",
@@ -40,7 +40,7 @@ func TestBuildMessageFromJSON(t *testing.T) {
 		t.Parallel()
 
 		data := []byte(`[4,"1","GenericError","error",{"foo":"bar"}]`)
-		msg, err := message.FromJSON(data)
+		msg, err := message.FromJSON(data, 0)
 		assert.Nil(t, err)
 		assert.Equal(t, msg.(message.CallError), message.CallError{
 			MessageID:        "1",
@@ -54,7 +54,7 @@ func TestBuildMessageFromJSON(t *testing.T) {
 		t.Parallel()
 
 		data := []byte(`[5,"1","GenericError","error",{"foo":"bar"}]`)
-		msg, err := message.FromJSON(data)
+		msg, err := message.FromJSON(data, 0)
 		assert.Nil(t, err)
 		assert.Equal(t, msg.(message.CallResultError), message.CallResultError{
 			MessageID:        "1",
@@ -68,7 +68,7 @@ func TestBuildMessageFromJSON(t *testing.T) {
 		t.Parallel()
 
 		data := []byte(`[6,"1","DataTransfer",{"foo":"bar"}]`)
-		msg, err := message.FromJSON(data)
+		msg, err := message.FromJSON(data, 0)
 		assert.Nil(t, err)
 		assert.Equal(t, msg.(message.Send), message.Send{
 			MessageID: "1",
@@ -135,7 +135,60 @@ func TestBuildMessageFromJSON(t *testing.T) {
 			t.Run(tc.name, func(t *testing.T) {
 				t.Parallel()
 
-				_, err := message.FromJSON(tc.data)
+				_, err := message.FromJSON(tc.data, 0)
+				assert.ErrorIs(t, err, tc.expectedError)
+			})
+		}
+	})
+
+	t.Run("max size", func(t *testing.T) {
+		t.Parallel()
+
+		data := []byte(`[2,"1","GetConfiguration",{"foo":"bar"}]`)
+
+		testCases := []struct {
+			name          string
+			data          []byte
+			maxSize       int
+			expectedError error
+		}{
+			{
+				name:    "no limit",
+				data:    data,
+				maxSize: 0,
+			},
+			{
+				name:    "below limit",
+				data:    data,
+				maxSize: len(data) + 1,
+			},
+			{
+				name:    "at limit",
+				data:    data,
+				maxSize: len(data),
+			},
+			{
+				name:          "above limit",
+				data:          data,
+				maxSize:       len(data) - 1,
+				expectedError: message.ErrMessageTooLarge,
+			},
+			{
+				name:          "checked before other validation",
+				data:          []byte(`[2,"1","GetConfiguration",{"foo":"bar` + "\x8A" + `"}]`),
+				maxSize:       1,
+				expectedError: message.ErrMessageTooLarge,
+			},
+		}
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+
+				_, err := message.FromJSON(tc.data, tc.maxSize)
+				if tc.expectedError == nil {
+					assert.Nil(t, err)
+					return
+				}
 				assert.ErrorIs(t, err, tc.expectedError)
 			})
 		}

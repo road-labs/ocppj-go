@@ -10,6 +10,8 @@ import (
 type Type int
 
 var (
+	// ErrMessageTooLarge is returned when the message exceeds the configured maximum size.
+	ErrMessageTooLarge = errors.New("message exceeds maximum size")
 	// ErrInvalidUTF8 is returned when the message contains invalid UTF-8 byte sequences.
 	ErrInvalidUTF8 = errors.New("message contains invalid UTF-8")
 	// ErrInvalidJSON is returned if the message contains malformed json
@@ -38,7 +40,12 @@ type Message any
 // - CallError
 // - CallResultError
 // - Send
-func FromJSON(data []byte) (Message, error) {
+// maxSize is the maximum allowed size of the message in bytes. A value of 0 means no limit is applied.
+func FromJSON(data []byte, maxSize int) (Message, error) {
+	if maxSize > 0 && len(data) > maxSize {
+		return nil, fmt.Errorf("message size %d exceeds limit of %d: %w", len(data), maxSize, ErrMessageTooLarge)
+	}
+
 	if !utf8.Valid(data) {
 		return nil, fmt.Errorf("message cannot be parsed: %w", ErrInvalidUTF8)
 	}

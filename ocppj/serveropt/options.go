@@ -79,6 +79,14 @@ func WithClientRateLimiter(limiter ocppj.ClientRateLimiter) ocppj.ServerOption {
 	}
 }
 
+// WithClientMaxMessageSize specifies the maximum size, in bytes, of a message read from clients managed by the server.
+// Messages exceeding this size are treated as invalid. The default is 0, which means no limit is applied.
+func WithClientMaxMessageSize(size int) ocppj.ServerOption {
+	return func(c *ocppj.ServerConfig) {
+		c.ClientMaxMessageSize = size
+	}
+}
+
 // WithDrainStrategy configures a function that can be used to change the client drain strategy during shutdown. The
 // default strategy is to attempt to gracefully close all clients at the same time.
 func WithDrainStrategy(strategy ocppj.DrainStrategy) ocppj.ServerOption {

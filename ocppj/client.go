@@ -33,6 +33,7 @@ type Client struct {
 	callTimeout      time.Duration
 	processCallsDone chan struct{}
 	rateLimiter      ClientRateLimiter
+	maxMessageSize   int
 	logger           *slog.Logger
 }
 
@@ -114,6 +115,7 @@ func Open(ctx context.Context, url string, hooks ClientHooks, opts ...ClientOpti
 		wsClient,
 		conf.CallTimeout,
 		conf.RateLimiter,
+		conf.MaxMessageSize,
 		conf.Logger,
 	)
 }
@@ -125,6 +127,7 @@ func newClient(
 	wsClient WebsocketClient,
 	callTimeout time.Duration,
 	rateLimiter ClientRateLimiter,
+	maxMessageSize int,
 	logger *slog.Logger,
 ) (*Client, error) {
 	processCtx, cancel := context.WithCancel(context.Background())
@@ -139,6 +142,7 @@ func newClient(
 		callTimeout:      callTimeout,
 		processCallsDone: make(chan struct{}),
 		rateLimiter:      rateLimiter,
+		maxMessageSize:   maxMessageSize,
 		logger:           logger,
 	}
 	go func() {
@@ -160,7 +164,7 @@ func (c *Client) Read(ctx context.Context) error {
 			return err
 		}
 
-		msg, err := message.FromJSON(data.Data)
+		msg, err := message.FromJSON(data.Data, c.maxMessageSize)
 		if err != nil {
 			if err = c.hooks.OnInvalidMessageRead(ctx, c, data.Data, err); err != nil {
 				c.logger.Error("failed to handle invalid message", slog.Any("error", err))

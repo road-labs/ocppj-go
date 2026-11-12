@@ -443,6 +443,55 @@ func TestClient_RateLimit_ReturnRateLimitCall(t *testing.T) {
 	wg.Wait()
 }
 
+func TestClient_Read_MaxMessageSize(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	withinLimit := []byte(`[2,"message-1","Heartbeat",{}]`)
+	exceedsLimit := []byte(`[2,"message-2","Heartbeat",{"foo":"bar"}]`)
+
+	invalidReads := make(chan error)
+	callReads := make(chan message.Call)
+
+	clientHooks := mocks.NewMockClientHooks(ctrl)
+	clientHooks.EXPECT().OnCallRead(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ any, _ any, call message.Call) error {
+		callReads <- call
+		return nil
+	})
+	clientHooks.EXPECT().OnInvalidMessageRead(gomock.Any(), gomock.Any(), exceedsLimit, gomock.Any()).DoAndReturn(func(_ any, _ any, _ any, err error) error {
+		invalidReads <- err
+		return nil
+	})
+
+	reads := make(chan websocket.Message)
+	wsClient := mocks.NewMockWebsocketClient(ctrl)
+	wsClient.EXPECT().Read().AnyTimes().DoAndReturn(func() (websocket.Message, error) {
+		return <-reads, nil
+	})
+
+	client, err := ocppj.Open(
+		ctx,
+		"ws://localhost",
+		clientHooks,
+		clientopt.WithWebsocketClient(wsClient),
+		clientopt.WithMaxMessageSize(len(withinLimit)),
+	)
+	require.NoError(t, err)
+
+	go func() {
+		_ = client.Read(ctx)
+	}()
+
+	reads <- websocket.TextMessage(withinLimit)
+	assert.Equal(t, "message-1", (<-callReads).MessageID)
+
+	reads <- websocket.TextMessage(exceedsLimit)
+	assert.ErrorIs(t, <-invalidReads, message.ErrMessageTooLarge)
+}
+
 func TestClient_WriteCallResultError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
